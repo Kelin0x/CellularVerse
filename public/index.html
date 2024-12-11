@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>康威生命游戏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2481cc;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a6dad;
+        }
+
+        #grid {
+            display: grid;
+            gap: 1px;
+            background-color: #ccc;
+            padding: 1px;
+            width: 800px;
+            height: 800px;
+            contain: strict;
+        }
+
+        .cell {
+            background-color: white;
+            will-change: background-color;
+            contain: strict;
+            transition: background-color 0.2s;
+        }
+
+        .alive {
+            background-color: #2481cc;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button onclick="startGame()">开始</button>
+        <button onclick="stopGame()">停止</button>
+        <button onclick="clearGrid()">清除</button>
+        <button onclick="randomize()">随机</button>
+    </div>
+    <div id="grid"></div>
+
+    <script>
+        const GRID_SIZE = 80; // 减小网格大小到20x20
+        let grid = [];
+        let prevGrid = []; // 用于存储上一次状态
+        let isRunning = false;
+        let animationId = null;
+        let cells = []; // 存储所有cell的引用
+
+        // 初始化网格
+        function initGrid() {
+            const container = document.getElementById('grid');
+            container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            
+            // 创建二维数组
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+            prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+            
+            // 清空容器
+            container.innerHTML = '';
+            cells = []; // 重置cells数组
+            
+            // 创建单元格
+            const fragment = document.createDocumentFragment(); // 使用文档片段优化DOM操作
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => toggleCell(i, j);
+                    fragment.appendChild(cell);
+                    cells.push(cell);
+                }
+            }
+            container.appendChild(fragment);
+        }
+
+        // 切换细胞状态
+        function toggleCell(i, j) {
+            grid[i][j] = !grid[i][j];
+            updateDisplay();
+        }
+
+        // 优化的更新显示函数
+        function updateDisplay() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const index = i * GRID_SIZE + j;
+                    // 只在状态发生变化时更新DOM
+                    if (grid[i][j] !== prevGrid[i][j]) {
+                        cells[index].classList.toggle('alive', grid[i][j]);
+                    }
+                }
+            }
+            // 更新上一次状态
+            prevGrid = grid.map(row => [...row]);
+        }
+
+        // 优化的下一代计算函数
+        function nextGeneration() {
+            const newGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const neighbors = countNeighbors(i, j);
+                    newGrid[i][j] = grid[i][j] ? 
+                        (neighbors === 2 || neighbors === 3) : 
+                        (neighbors === 3);
+                }
+            }
+            
+            grid = newGrid;
+            updateDisplay();
+        }
+
+        // 优化的邻居计算函数
+        function countNeighbors(x, y) {
+            let count = 0;
+            const offsets = [
+                [-1,-1], [-1,0], [-1,1],
+                [0,-1],          [0,1],
+                [1,-1],  [1,0],  [1,1]
+            ];
+            
+            for (const [i, j] of offsets) {
+                const newX = (x + i + GRID_SIZE) % GRID_SIZE;
+                const newY = (y + j + GRID_SIZE) % GRID_SIZE;
+                if (grid[newX][newY]) count++;
+            }
+            return count;
+        }
+
+        // 优化的游戏循环
+        function gameLoop() {
+            if (!isRunning) return;
+            
+            nextGeneration();
+            // 使用requestAnimationFrame代替setTimeout
+            animationId = requestAnimationFrame(() => {
+                // 限制更新频率到每秒5次
+                setTimeout(gameLoop, 50);
+            });
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (!isRunning) {
+                isRunning = true;
+                gameLoop();
+            }
+        }
+
+        // 停止游戏
+        function stopGame() {
+            isRunning = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        }
+
+        // 清除网格
+        function clearGrid() {
+            stopGame();
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+            updateDisplay();
+        }
+
+        // 优化的随机填充函数
+        function randomize() {
+            stopGame();
+            const density = 0.3; // 生命密度
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    grid[i][j] = Math.random() < density;
+                }
+            }
+            updateDisplay();
+        }
+
+        // 初始化
+        window.onload = () => {
+            initGrid();
+            randomize();
+        };
+    </script>
+</body>
+</html>
