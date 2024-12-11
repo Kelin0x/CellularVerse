@@ -3,6 +3,7 @@
 <head>
     <title>康威生命游戏</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,7 +16,8 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: var(--tg-theme-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000000);
             font-family: Arial, sans-serif;
         }
 
@@ -28,8 +30,8 @@
             padding: 8px 16px;
             border: none;
             border-radius: 4px;
-            background-color: #2481cc;
-            color: white;
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, white);
             cursor: pointer;
         }
 
@@ -55,7 +57,7 @@
         }
 
         .alive {
-            background-color: #2481cc;
+            background-color: var(--tg-theme-button-color, #2481cc);
         }
     </style>
 </head>
@@ -76,6 +78,13 @@
         let animationId = null;
         let cells = []; // 存储所有cell的引用
 
+        // 初始化 Telegram WebApp
+        const webapp = window.Telegram.WebApp;
+        webapp.ready();
+        
+        // 设置主题
+        webapp.setHeaderColor('secondary_bg_color');
+        
         // 初始化网格
         function initGrid() {
             const container = document.getElementById('grid');
@@ -193,7 +202,7 @@
             updateDisplay();
         }
 
-        // 优化的随机填充函数
+        // 优化的随���填充函数
         function randomize() {
             stopGame();
             const density = 0.3; // 生命密度
