@@ -57,7 +57,26 @@
         }
 
         .alive {
+            /* 方案1: 强制使用固定颜色 */
+            background-color: #2481cc;
+            
+            /* 方案2: 根据平台提供备选颜色 */
             background-color: var(--tg-theme-button-color, #2481cc);
+        }
+
+        /* 方案3: 为不同平台设置不同颜色 */
+        @media (max-width: 768px) {
+            /* 移动端样式 */
+            .alive {
+                background-color: #504b83;
+            }
+        }
+
+        @media (min-width: 769px) {
+            /* 桌面端样式 */
+            .alive {
+                background-color: var(--tg-theme-button-color, #8774e1);
+            }
         }
     </style>
 </head>
@@ -94,7 +113,7 @@
             grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
             prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
             
-            // 清空容器
+            // 清空��器
             container.innerHTML = '';
             cells = []; // 重置cells数组
             
@@ -202,7 +221,7 @@
             updateDisplay();
         }
 
-        // 优化的随���填充函数
+        // 优化的随机填充函数
         function randomize() {
             stopGame();
             const density = 0.3; // 生命密度
