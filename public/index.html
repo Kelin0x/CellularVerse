@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>康威生命游戏</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+    <title>生命游戏 | Game of Life</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,114 +13,447 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-color: var(--tg-theme-button-color, #2481cc);
+            --secondary-color: #9370db;
+            --bg-color: var(--tg-theme-bg-color, #f5f5f0);
+            --text-color: var(--tg-theme-text-color, #2c3e50);
+            --accent-color: #ff6b6b;
+            --grid-bg: rgba(233, 236, 239, 0.8);
+            --cell-bg: rgba(255, 255, 255, 0.9);
+        }
+
         body {
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 100% 100%, rgba(147, 112, 219, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 0% 0%, rgba(147, 112, 219, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(147, 112, 219, 0.03) 0%, transparent 100%);
+            color: var(--text-color);
+            font-family: 'Noto Serif SC', serif;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleFloat 3s ease-in-out infinite;
+        }
+
+        .quote-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            position: relative;
+            max-width: 800px;
+            margin: 2rem auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .quote {
+            font-size: 1.2rem;
+            color: var(--quote-color);
+            line-height: 1.8;
+            position: relative;
+            padding: 0 3rem;
+        }
+
+        .quote::before,
+        .quote::after {
+            font-family: 'Material Icons Round';
+            position: absolute;
+            color: rgba(147, 112, 219, 0.3);
+            font-size: 2rem;
+        }
+
+        .quote::before {
+            content: "format_quote";
+            left: 0;
+            top: -1rem;
+            transform: rotate(180deg);
+        }
+
+        .quote::after {
+            content: "format_quote";
+            right: 0;
+            bottom: -1rem;
+            transform: none;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 20px;
-            background-color: var(--tg-theme-bg-color, #f0f0f0);
-            color: var(--tg-theme-text-color, #000000);
-            font-family: Arial, sans-serif;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.1),
+                0 1px 2px rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
         }
 
         #controls {
-            margin-bottom: 20px;
+            display: flex;
+            gap: 1.5rem;
+            padding: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         button {
-            margin: 0 5px;
-            padding: 8px 16px;
+            padding: 1rem 2rem;
             border: none;
-            border-radius: 4px;
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, white);
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 25px rgba(147, 112, 219, 0.3);
         }
 
         button:hover {
-            background-color: #1a6dad;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(147, 112, 219, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0) scale(0.98);
         }
 
         #grid {
             display: grid;
             gap: 1px;
-            background-color: #ccc;
-            padding: 1px;
-            width: 800px;
-            height: 800px;
-            contain: strict;
+            background: var(--grid-bg);
+            border-radius: 20px;
+            padding: 2px;
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.1),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            transform: perspective(1000px) rotateX(5deg);
+        }
+
+        #grid:hover {
+            transform: perspective(1000px) rotateX(0deg);
         }
 
         .cell {
-            background-color: white;
-            will-change: background-color;
-            contain: strict;
-            transition: background-color 0.2s;
+            background: var(--cell-bg);
+            border-radius: 4px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
         }
 
-        .alive {
-            /* 方案1: 强制使用固定颜色 */
-            background-color: #2481cc;
-            
-            /* 方案2: 根据平台提供备选颜色 */
-            background-color: var(--tg-theme-button-color, #2481cc);
+        .cell:hover {
+            transform: scale(1.15);
+            z-index: 2;
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.3);
         }
 
-        /* 方案3: 为不同平台设置不同颜色 */
-        @media (max-width: 768px) {
-            /* 移动端样式 */
-            .alive {
-                background-color: #504b83;
+        .cell.alive {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 0 20px rgba(147, 112, 219, 0.4);
+        }
+
+        .stats {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        @media (min-width: 768px) {
+            #grid {
+                width: 800px;
+                height: 800px;
+            }
+
+            .header h1 {
+                font-size: 3rem;
             }
         }
 
-        @media (min-width: 769px) {
-            /* 桌面端样式 */
-            .alive {
-                background-color: var(--tg-theme-button-color, #8774e1);
+        @media (max-width: 767px) {
+            .container {
+                padding: 1rem;
             }
+
+            #grid {
+                width: 95vw;
+                height: 95vw;
+                border-radius: 12px;
+                padding: 1px;
+                transform: none;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            button {
+                padding: 0.8rem 1.6rem;
+                font-size: 1rem;
+            }
+
+            .quote {
+                font-size: 1rem;
+                padding: 0 2.5rem;
+            }
+
+            .quote::before,
+            .quote::after {
+                font-size: 1.5rem;
+            }
+        }
+
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .setting-item {
+            margin: 1.5rem 0;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .setting-item input {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        #gridSizeValue {
+            display: block;
+            text-align: center;
+            margin-top: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .settings-content h3 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .settings-content button {
+            margin: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header, .quote-container, #grid, #controls {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button onclick="startGame()">开始</button>
-        <button onclick="stopGame()">停止</button>
-        <button onclick="clearGrid()">清除</button>
-        <button onclick="randomize()">随机</button>
+    <div class="container">
+        <header class="header">
+            <h1>生命游戏</h1>
+        </header>
+
+        <div class="quote-container">
+            <p class="quote">
+                如果能一眼看到人的一生。<br>
+                那个结构一定很美吧。
+            </p>
+        </div>
+        
+        <div class="game-container">
+            <div id="controls">
+                <button onclick="startGame()">开始演化</button>
+                <button onclick="stopGame()">暂停</button>
+                <button onclick="clearGrid()">清空画布</button>
+                <button onclick="randomize()">随机生成</button>
+                <button onclick="toggleSettings()">设置</button>
+            </div>
+            
+            <div id="grid"></div>
+            
+            <div class="stats">
+                点击格子来创建或删除生命细胞
+            </div>
+        </div>
     </div>
-    <div id="grid"></div>
+
+    <div id="settings-panel" class="settings-panel">
+        <div class="settings-content">
+            <h3>游戏设置</h3>
+            <div class="setting-item">
+                <label for="gridSize">网格大小 (20-100):</label>
+                <input type="range" id="gridSize" min="20" max="100" value="80">
+                <span id="gridSizeValue">80 x 80</span>
+            </div>
+            <div class="setting-item">
+                <label for="cellColor">细胞颜色:</label>
+                <input type="color" id="cellColor" value="#2481cc">
+            </div>
+            <button onclick="applySettings()">应用设置</button>
+            <button onclick="toggleSettings()">关闭</button>
+        </div>
+    </div>
 
     <script>
-        const GRID_SIZE = 80; // 减小网格大小到20x20
-        let grid = [];
-        let prevGrid = []; // 用于存储上一次状态
-        let isRunning = false;
-        let animationId = null;
-        let cells = []; // 存储所有cell的引用
+        // 添加全局变量
+        let currentGridSize = 80;
+        let currentCellColor = '#2481cc';
 
-        // 初始化 Telegram WebApp
-        const webapp = window.Telegram.WebApp;
-        webapp.ready();
-        
-        // 设置主题
-        webapp.setHeaderColor('secondary_bg_color');
-        
-        // 初始化网格
+        // 修改 GRID_SIZE 的定义
+        let GRID_SIZE = currentGridSize;
+
+        // 监听网格大小滑块的变化
+        document.getElementById('gridSize').addEventListener('input', function(e) {
+            const size = parseInt(e.target.value);
+            document.getElementById('gridSizeValue').textContent = `${size} x ${size}`;
+        });
+
+        // 修改应用设置函数
+        function applySettings() {
+            // 先停止游戏
+            stopGame();
+            
+            // 获取新的网格大小
+            const newGridSize = parseInt(document.getElementById('gridSize').value);
+            const newCellColor = document.getElementById('cellColor').value;
+            
+            // 更新网格大小
+            if (newGridSize !== currentGridSize) {
+                currentGridSize = newGridSize;
+                GRID_SIZE = getGridSize(); // 考虑移动端限制
+                
+                // 重新初始化网格
+                initGrid();
+                
+                // 清空当前状态
+                grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+                prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+                
+                // 更新显示
+                updateDisplay();
+                
+                // 更新设置面板显示
+                document.getElementById('gridSizeValue').textContent = `${GRID_SIZE} x ${GRID_SIZE}`;
+            }
+            
+            // 更新细胞颜色
+            if (newCellColor !== currentCellColor) {
+                currentCellColor = newCellColor;
+                document.documentElement.style.setProperty('--primary-color', currentCellColor);
+            }
+            
+            // 关闭设置面板
+            toggleSettings();
+            
+            console.log('Settings applied:', {
+                gridSize: GRID_SIZE,
+                currentGridSize: currentGridSize,
+                cellColor: currentCellColor
+            });
+        }
+
+        // 修改 getGridSize 函数
+        function getGridSize() {
+            if (window.innerWidth <= 767) {
+                return Math.min(40, currentGridSize); // 移动端限制最大大小为40
+            }
+            return currentGridSize;
+        }
+
+        // 修改初始化函数
         function initGrid() {
             const container = document.getElementById('grid');
+            
+            // 设置网格列数
             container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
             
-            // 创建二维数组
-            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
-            prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
-            
-            // 清空��器
+            // 清空容器
             container.innerHTML = '';
+            
+            // 使用文档片段优化DOM操作
+            const fragment = document.createDocumentFragment();
             cells = []; // 重置cells数组
             
-            // 创建单元格
-            const fragment = document.createDocumentFragment(); // 使用文档片段优化DOM操作
+            // 创建新的单元格
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     const cell = document.createElement('div');
@@ -128,10 +463,56 @@
                     cells.push(cell);
                 }
             }
+            
+            // 一次性添加所有单元格
             container.appendChild(fragment);
         }
 
-        // 切换细胞状态
+        // 页面加载时初始化设置
+        window.addEventListener('load', () => {
+            // 初始设置值
+            currentGridSize = getGridSize();
+            GRID_SIZE = currentGridSize;
+            
+            // 设置初始值
+            document.getElementById('gridSize').value = currentGridSize;
+            document.getElementById('gridSizeValue').textContent = `${currentGridSize} x ${currentGridSize}`;
+            document.getElementById('cellColor').value = currentCellColor;
+            
+            // 初始化网格
+            initGrid();
+            
+            // 初始化空白网格
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+            prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+        });
+
+        // 添加窗口大小改变的监听
+        window.addEventListener('resize', () => {
+            const newSize = getGridSize();
+            if (newSize !== GRID_SIZE) {
+                GRID_SIZE = newSize;
+                initGrid();
+                updateDisplay();
+            }
+        });
+
+        let grid = [];
+        let prevGrid = []; // 用于存储上一次状态
+        let isRunning = false;
+        let animationId = null;
+        let cells = []; // 存储所有cell的引用
+        let lastUpdateTime = 0;
+        const UPDATE_INTERVAL = 200; // 控制更新频率（毫秒）
+
+        // 初始化 Telegram WebApp
+        const webapp = window.Telegram.WebApp;
+        webapp.ready();
+        
+        // 设置主题
+        webapp.setHeaderColor('secondary_bg_color');
+        
+        // 换细胞状态
         function toggleCell(i, j) {
             grid[i][j] = !grid[i][j];
             updateDisplay();
@@ -154,48 +535,28 @@
 
         // 优化的下一代计算函数
         function nextGeneration() {
-            const newGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
-            
-            for (let i = 0; i < GRID_SIZE; i++) {
-                for (let j = 0; j < GRID_SIZE; j++) {
-                    const neighbors = countNeighbors(i, j);
-                    newGrid[i][j] = grid[i][j] ? 
-                        (neighbors === 2 || neighbors === 3) : 
-                        (neighbors === 3);
-                }
+            if (isRunning) {
+                const worker = new Worker('gameWorker.js');
+                worker.postMessage({ grid, GRID_SIZE });
+                worker.onmessage = function(e) {
+                    grid = e.data;
+                    updateDisplay();
+                    worker.terminate();
+                };
             }
-            
-            grid = newGrid;
-            updateDisplay();
-        }
-
-        // 优化的邻居计算函数
-        function countNeighbors(x, y) {
-            let count = 0;
-            const offsets = [
-                [-1,-1], [-1,0], [-1,1],
-                [0,-1],          [0,1],
-                [1,-1],  [1,0],  [1,1]
-            ];
-            
-            for (const [i, j] of offsets) {
-                const newX = (x + i + GRID_SIZE) % GRID_SIZE;
-                const newY = (y + j + GRID_SIZE) % GRID_SIZE;
-                if (grid[newX][newY]) count++;
-            }
-            return count;
         }
 
         // 优化的游戏循环
-        function gameLoop() {
+        function gameLoop(timestamp) {
             if (!isRunning) return;
             
-            nextGeneration();
-            // 使用requestAnimationFrame代替setTimeout
-            animationId = requestAnimationFrame(() => {
-                // 限制更新频率到每秒5次
-                setTimeout(gameLoop, 50);
-            });
+            // 控制更新频率
+            if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
+                nextGeneration();
+                lastUpdateTime = timestamp;
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         // 开始游戏
@@ -233,11 +594,13 @@
             updateDisplay();
         }
 
-        // 初始化
-        window.onload = () => {
-            initGrid();
-            randomize();
-        };
+        // 显示/隐藏设置面板
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+        }
     </script>
+
+
 </body>
 </html>
