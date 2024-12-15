@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>生命游戏 | Game of Life</title>
+    <title>Game of Life</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,18 +63,21 @@
         }
 
         .quote-container {
-            text-align: center;
-            margin: 2rem 0;
-            padding: 2rem;
-            position: relative;
-            max-width: 800px;
-            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2rem;
+            align-items: center;
+            gap: 20rem;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.1),
+                0 1px 2px rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            
         }
 
         .quote {
@@ -95,14 +98,14 @@
 
         .quote::before {
             content: "format_quote";
-            left: 0;
+            left: -1rem;
             top: -1rem;
             transform: rotate(180deg);
         }
 
         .quote::after {
             content: "format_quote";
-            right: 0;
+            right: -1rem;
             bottom: -1rem;
             transform: none;
         }
@@ -125,23 +128,26 @@
 
         #controls {
             display: flex;
-            gap: 1.5rem;
-            padding: 2rem;
             flex-wrap: wrap;
+            gap: 0.8rem;
             justify-content: center;
+            padding: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         button {
-            padding: 1rem 2rem;
+            padding: 0.6rem 1.2rem;
             border: none;
             border-radius: 15px;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 8px 25px rgba(147, 112, 219, 0.3);
+            min-width: auto;
         }
 
         button:hover {
@@ -162,12 +168,28 @@
             box-shadow: 
                 0 12px 40px rgba(0, 0, 0, 0.1),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            transform: perspective(1000px) rotateX(5deg);
         }
 
-        #grid:hover {
-            transform: perspective(1000px) rotateX(0deg);
+        @media (min-width: 768px) {
+            #grid {
+                width: 800px;
+                height: 800px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            #grid {
+                width: 95vw;
+                height: 95vw;
+                border-radius: 12px;
+                padding: 1px;
+                transform: none;
+            }
+            
+            .cell {
+                min-width: 8px;
+                min-height: 8px;
+            }
         }
 
         .cell {
@@ -242,6 +264,21 @@
             .quote::before,
             .quote::after {
                 font-size: 1.5rem;
+            }
+
+            #controls {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(255,255,255,0.9);
+                backdrop-filter: blur(10px);
+                padding: 0.5rem;
+                z-index: 100;
+            }
+
+            .game-container {
+                padding-bottom: 4rem;
             }
         }
 
@@ -379,114 +416,151 @@
             padding: 6px 12px;
             font-size: 0.9rem;
         }
+
+        .fab-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .fab {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 767px) {
+            .quote-container {
+                width: 95vw;
+                margin: 1rem auto;
+                padding: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>生命游戏</h1>
+            <h1>LifeChain Genesis</h1>
         </header>
 
         <div class="quote-container">
             <p class="quote">
-                如果能一眼看到人的一生。<br>
-                那个结构一定很美吧。
+                If we could see a person's entire life at a glance.<br>
+                I think the structure must be very beautiful.
             </p>
         </div>
         
         <div class="game-container">
             <div id="controls">
-                <button onclick="startGame()">开始演化</button>
-                <button onclick="stopGame()">暂停</button>
-                <button onclick="clearGrid()">清空画布</button>
-                <button onclick="randomize()">随机生成</button>
-                <button onclick="toggleSettings()">设置</button>
-                <button onclick="saveCurrentPattern()">保存模式</button>
-                <button onclick="toggleSavedPatterns()">已保存模式</button>
+                <div class="control-group">
+                    <button onclick="startGame()">Start</button>
+                    <button onclick="stopGame()">Pause</button>
+                </div>
+                
+                <div class="control-group">
+                    <button onclick="clearGrid()">Clear</button>
+                    <button onclick="randomize()">Random</button>
+                </div>
+                
+                <div class="control-group">
+                    <button onclick="toggleSettings()">Settings</button>
+                    <button onclick="saveCurrentPattern()">Save</button>
+                    <button onclick="toggleSavedPatterns()">Patterns</button>
+                </div>
             </div>
             
             <div id="grid"></div>
             
             <div class="stats">
-                点击格子来创建或删除生命细胞
+                Click cells to create or remove life cells
             </div>
         </div>
     </div>
 
     <div id="settings-panel" class="settings-panel">
         <div class="settings-content">
-            <h3>游戏设置</h3>
+            <h3>Game Settings</h3>
             <div class="setting-item">
-                <label for="gridSize">网格大小 (20-100):</label>
+                <label for="gridSize">Grid Size (20-100):</label>
                 <input type="range" id="gridSize" min="20" max="100" value="80">
                 <span id="gridSizeValue">80 x 80</span>
             </div>
             <div class="setting-item">
-                <label for="cellColor">细胞颜色:</label>
+                <label for="cellColor">Cell Color:</label>
                 <input type="color" id="cellColor" value="#2481cc">
             </div>
-            <button onclick="applySettings()">应用设置</button>
-            <button onclick="toggleSettings()">关闭</button>
+            <button onclick="applySettings()">Apply</button>
+            <button onclick="toggleSettings()">Close</button>
         </div>
     </div>
 
     <div class="saved-patterns-panel">
         <div class="patterns-header">
-            <h3>已保存的模式</h3>
-            <button class="close-panel" onclick="toggleSavedPatterns()">关闭</button>
+            <h3>Saved Patterns</h3>
+            <button class="close-panel" onclick="toggleSavedPatterns()">Close</button>
         </div>
         <div class="patterns-list"></div>
     </div>
 
     <script>
-        // 添加全局变量
+        // Add global variables
         let currentGridSize = 80;
         let currentCellColor = '#2481cc';
 
-        // 修改 GRID_SIZE 的定义
+        // Modify GRID_SIZE definition
         let GRID_SIZE = currentGridSize;
 
-        // 监听网格大小滑块的变化
+        // Listen for grid size slider changes
         document.getElementById('gridSize').addEventListener('input', function(e) {
             const size = parseInt(e.target.value);
             document.getElementById('gridSizeValue').textContent = `${size} x ${size}`;
         });
 
-        // 修改应用设置函数
+        // Modify apply settings function
         function applySettings() {
-            // 先停止游戏
+            // Stop game first
             stopGame();
             
-            // 获取新的网格大小
+            // Get new grid size
             const newGridSize = parseInt(document.getElementById('gridSize').value);
             const newCellColor = document.getElementById('cellColor').value;
             
-            // 更新网格大小
+            // Update grid size
             if (newGridSize !== currentGridSize) {
                 currentGridSize = newGridSize;
-                GRID_SIZE = getGridSize(); // 考虑移动端限制
+                GRID_SIZE = getGridSize(); // Consider mobile limitations
                 
-                // 重新初始化网格
+                // Reinitialize grid
                 initGrid();
                 
-                // 清空当前状态
+                // Clear current state
                 grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
                 prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
                 
-                // 更新显示
+                // Update display
                 updateDisplay();
                 
-                // 更新设置面板显示
+                // Update settings panel display
                 document.getElementById('gridSizeValue').textContent = `${GRID_SIZE} x ${GRID_SIZE}`;
             }
             
-            // 更新细胞颜色
+            // Update cell color
             if (newCellColor !== currentCellColor) {
                 currentCellColor = newCellColor;
                 document.documentElement.style.setProperty('--primary-color', currentCellColor);
             }
             
-            // 关闭设置面板
+            // Close settings panel
             toggleSettings();
             
             console.log('Settings applied:', {
@@ -496,29 +570,29 @@
             });
         }
 
-        // 改 getGridSize 函数
+        // Modify getGridSize function
         function getGridSize() {
             if (window.innerWidth <= 767) {
-                return Math.min(40, currentGridSize); // 移动端限制最大大小为40
+                return Math.min(40, currentGridSize); // Mobile limit max size to 40
             }
             return currentGridSize;
         }
 
-        // 修改初始化函数
+        // Modify initialization function
         function initGrid() {
             const container = document.getElementById('grid');
             
-            // 设置网格列数
+            // Set grid columns
             container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
             
-            // 清空容器
+            // Clear container
             container.innerHTML = '';
             
-            // 使用文档片段优化DOM操作
+            // Use document fragment to optimize DOM operations
             const fragment = document.createDocumentFragment();
-            cells = []; // 重置cells数组
+            cells = []; // Reset cells array
             
-            // 创建新的单元格
+            // Create new cells
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     const cell = document.createElement('div');
@@ -529,30 +603,30 @@
                 }
             }
             
-            // 一次性添加所有单元格
+            // Add all cells at once
             container.appendChild(fragment);
         }
 
-        // 页面加载时初始化设置
+        // Initialize settings on page load
         window.addEventListener('load', () => {
-            // 初始设置值
+            // Initial settings values
             currentGridSize = getGridSize();
             GRID_SIZE = currentGridSize;
             
-            // 设置初始值
+            // Set initial values
             document.getElementById('gridSize').value = currentGridSize;
             document.getElementById('gridSizeValue').textContent = `${currentGridSize} x ${currentGridSize}`;
             document.getElementById('cellColor').value = currentCellColor;
             
-            // 初始化网格
+            // Initialize grid
             initGrid();
             
-            // 初始化空白网格
+            // Initialize empty grid
             grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
             prevGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
         });
 
-        // 添加窗口大小改变的监听
+        // Add window resize listener
         window.addEventListener('resize', () => {
             const newSize = getGridSize();
             if (newSize !== GRID_SIZE) {
@@ -563,42 +637,42 @@
         });
 
         let grid = [];
-        let prevGrid = []; // 用于存储上一次状态
+        let prevGrid = []; // Store previous state
         let isRunning = false;
         let animationId = null;
-        let cells = []; // 存储所有cell的引用
+        let cells = []; // Store references to all cells
         let lastUpdateTime = 0;
-        const UPDATE_INTERVAL = 200; // 控制更新频率（毫秒）
+        const UPDATE_INTERVAL = 200; // Control update frequency (milliseconds)
 
-        // 初始化 Telegram WebApp
+        // Initialize Telegram WebApp
         const webapp = window.Telegram.WebApp;
         webapp.ready();
         
-        // 设置主题
+        // Set theme
         webapp.setHeaderColor('secondary_bg_color');
         
-        // 换细胞状态
+        // Toggle cell state
         function toggleCell(i, j) {
             grid[i][j] = !grid[i][j];
             updateDisplay();
         }
 
-        // 优化的更新显示函数
+        // Optimized update display function
         function updateDisplay() {
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     const index = i * GRID_SIZE + j;
-                    // 只在状态发生变化时更新DOM
+                    // Only update DOM when state changes
                     if (grid[i][j] !== prevGrid[i][j]) {
                         cells[index].classList.toggle('alive', grid[i][j]);
                     }
                 }
             }
-            // 更新上一次状态
+            // Update previous state
             prevGrid = grid.map(row => [...row]);
         }
 
-        // 优化的下一代计算函数
+        // Optimized next generation calculation
         function nextGeneration() {
             if (isRunning) {
                 const worker = new Worker('gameWorker.js');
@@ -611,11 +685,11 @@
             }
         }
 
-        // 优化的游戏循环
+        // Optimized game loop
         function gameLoop(timestamp) {
             if (!isRunning) return;
             
-            // 控制更新频率
+            // Control update frequency
             if (timestamp - lastUpdateTime >= UPDATE_INTERVAL) {
                 nextGeneration();
                 lastUpdateTime = timestamp;
@@ -624,7 +698,7 @@
             animationId = requestAnimationFrame(gameLoop);
         }
 
-        // 开始游戏
+        // Start game
         function startGame() {
             if (!isRunning) {
                 isRunning = true;
@@ -632,7 +706,7 @@
             }
         }
 
-        // 停止游戏
+        // Stop game
         function stopGame() {
             isRunning = false;
             if (animationId) {
@@ -640,17 +714,17 @@
             }
         }
 
-        // 清除网格
+        // Clear grid
         function clearGrid() {
             stopGame();
             grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
             updateDisplay();
         }
 
-        // 优化的随机填充函数
+        // Optimized random fill function
         function randomize() {
             stopGame();
-            const density = 0.3; // 生命密度
+            const density = 0.3; // Life density
             for (let i = 0; i < GRID_SIZE; i++) {
                 for (let j = 0; j < GRID_SIZE; j++) {
                     grid[i][j] = Math.random() < density;
@@ -659,7 +733,7 @@
             updateDisplay();
         }
 
-        // 显示/隐藏设置面板
+        // Show/hide settings panel
         function toggleSettings() {
             const panel = document.getElementById('settings-panel');
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
@@ -672,9 +746,9 @@
 
         const STORAGE_KEY = 'life_game_patterns';
 
-        // 保存当前模式
+        // Save current pattern
         function saveCurrentPattern() {
-            const name = prompt('给这个模式起个名字：', '未命名模式');
+            const name = prompt('Name this pattern:', 'Unnamed Pattern');
             if (!name) return;
 
             const pattern = {
@@ -689,14 +763,14 @@
                 patterns.push(pattern);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
                 updateSavedPatternsUI();
-                alert('模式保存成功！');
+                alert('Pattern saved successfully!');
             } catch (error) {
-                console.error('保存失败:', error);
-                alert('保存失败，请重试');
+                console.error('Save failed:', error);
+                alert('Save failed, please try again');
             }
         }
 
-        // 更新已保存模式的UI
+        // Update saved patterns UI
         function updateSavedPatternsUI() {
             const patternsList = document.querySelector('.patterns-list');
             patternsList.innerHTML = '';
@@ -705,7 +779,7 @@
                 const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
                 
                 if (patterns.length === 0) {
-                    patternsList.innerHTML = '<div class="pattern-item">暂无保存的模式</div>';
+                    patternsList.innerHTML = '<div class="pattern-item">No saved patterns</div>';
                     return;
                 }
 
@@ -715,19 +789,19 @@
                     patternElement.innerHTML = `
                         <span>${pattern.name}</span>
                         <div class="pattern-actions">
-                            <button onclick="loadPattern('${pattern.id}')">加载</button>
-                            <button onclick="deletePattern('${pattern.id}')">删除</button>
+                            <button onclick="loadPattern('${pattern.id}')">Load</button>
+                            <button onclick="deletePattern('${pattern.id}')">Delete</button>
                         </div>
                     `;
                     patternsList.appendChild(patternElement);
                 });
             } catch (error) {
-                console.error('加载保存的模式失败:', error);
-                patternsList.innerHTML = '<div class="pattern-item">加载失败</div>';
+                console.error('Failed to load saved patterns:', error);
+                patternsList.innerHTML = '<div class="pattern-item">Loading failed</div>';
             }
         }
 
-        // 加载保存的模式
+        // Load saved pattern
         function loadPattern(patternId) {
             try {
                 const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -737,33 +811,51 @@
                     grid = JSON.parse(pattern.grid);
                     updateDisplay();
                     toggleSavedPatterns();
-                    alert('模式加载成功！');
+                    alert('Pattern loaded successfully!');
                 }
             } catch (error) {
-                console.error('加载模式失败:', error);
-                alert('加载模式失败，请重试');
+                console.error('Failed to load pattern:', error);
+                alert('Failed to load pattern, please try again');
             }
         }
 
-        // 删除保存的模式
+        // Delete saved pattern
         function deletePattern(patternId) {
-            if (!confirm('确定要删除这个模式吗？')) return;
+            if (!confirm('Are you sure you want to delete this pattern?')) return;
 
             try {
                 let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
                 patterns = patterns.filter(p => p.id !== parseInt(patternId));
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
                 updateSavedPatternsUI();
-                alert('删除成功！');
+                alert('Deleted successfully!');
             } catch (error) {
-                console.error('删除模式失败:', error);
-                alert('删除失败，请重试');
+                console.error('Failed to delete pattern:', error);
+                alert('Delete failed, please try again');
             }
         }
 
-        // 在页面加载时初始化已保存模式面板
+        // Initialize saved patterns panel on page load
         document.addEventListener('DOMContentLoaded', () => {
             updateSavedPatternsUI();
+        });
+
+        // Add gesture controls
+        let touchStartY;
+
+        document.addEventListener('touchstart', e => {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', e => {
+            const deltaY = e.touches[0].clientY - touchStartY;
+            if(deltaY > 50) {
+                // Swipe down to show controls
+                showControls();
+            } else if(deltaY < -50) {
+                // Swipe up to hide controls
+                hideControls(); 
+            }
         });
     </script>
 
