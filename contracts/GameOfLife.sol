@@ -17,6 +17,9 @@ contract GameOfLife {
     // 存储所有保存的模式
     mapping(bytes32 => Pattern) public patterns;
     
+    // 用户的模式列表
+    mapping(address => string[]) public userPatterns;
+    
     // 记录用户的游戏次数
     mapping(address => uint256) public gamesPlayed;
     
@@ -68,6 +71,8 @@ contract GameOfLife {
             exists: true
         });
         
+        userPatterns[msg.sender].push(ipfsHash);
+        
         // 触发保存事件
         emit PatternSaved(msg.sender, ipfsHash, patternId);
     }
@@ -85,5 +90,14 @@ contract GameOfLife {
     function withdraw() external {
         require(msg.sender == owner, "Only owner can withdraw");
         payable(owner).transfer(address(this).balance);
+    }
+    
+    // 获取用户的模式列表
+    function getUserPatterns(address user) 
+        external 
+        view 
+        returns (string[] memory) 
+    {
+        return userPatterns[user];
     }
 } 

@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "D:\\Project\\Lei-dev\\LifeChianGenesis\\contracts\\GameOfLife.sol": {
-      "lastModificationDate": 1734261960537,
-      "contentHash": "6a202e16ef34a9f6ec3077fd13bda99b",
+      "lastModificationDate": 1734268122297,
+      "contentHash": "e9e9a31528c9714d2272f1daf325e161",
       "sourceName": "contracts/GameOfLife.sol",
       "solcConfig": {
         "version": "0.8.19",

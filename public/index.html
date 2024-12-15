@@ -512,7 +512,7 @@
                 font-size: 0.8rem;
             }
 
-            /* 为底部控制栏留出空间 */
+            /* 为底部控制栏留空间 */
             .game-container {
                 padding-bottom: 4rem;
             }
@@ -560,7 +560,7 @@
             /* 网格调整 */
             #grid {
                 width: calc(100vw - 20px);
-                height: calc(100vw - 20px);
+                height: calc(100vw - 20px); 
                 max-width: 340px;
                 max-height: 340px;
                 margin: 0 auto;
@@ -991,7 +991,7 @@
     
     <div class="wallet-status">
         <span class="status-dot"></span>
-        <span class="wallet-address">未连接</span>
+        <span class="wallet-address">未连��</span>
     </div>
 
     <script>
@@ -1037,11 +1037,31 @@
                 "outputs": [],
                 "stateMutability": "payable",
                 "type": "function"
+            },
+            // getUserPatterns
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    }
+                ],
+                "name": "getUserPatterns",
+                "outputs": [
+                    {
+                        "internalType": "string[]",
+                        "name": "",
+                        "type": "string[]"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             }
         ];
         
         // 合约地址
-        const CONTRACT_ADDRESS = "0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71";
+        const CONTRACT_ADDRESS = "0x4Ae98b16E13EA366ee53F76FBbE5A8F9eEC9DEF5";
 
         // Add global variables
         let currentGridSize = 50;
@@ -1319,120 +1339,167 @@
           }
         }
 
-        // 修改存函数
-        async function saveCurrentPattern() {
-            // 检查钱包连接
-            if(!userAccount) {
-                const connected = await connectWallet();
-                if(!connected) return;
-            }
-
-            const name = prompt('Name this pattern:', 'Unnamed Pattern');
-            if (!name) return;
-
+        // 从IPFS加载模式
+        async function loadPatternFromIPFS(ipfsHash) {
             try {
-                // 准备要保存的数据
-                const patternData = {
-                    name: name,
-                    grid: grid,
-                    timestamp: new Date().toISOString(),
-                    creator: userAccount
-                };
-
-                // 上传到IPFS
-                const ipfsHash = await uploadToIPFS(patternData);
-
-                // 调用合约的savePattern函数
-                const receipt = await gameContract.methods.savePattern(ipfsHash).send({
-                    from: userAccount,
-                    value: web3.utils.toWei('0.001', 'ether')
-                });
-
-                // 保存到本地存储
-                const pattern = {
-                    id: Date.now(),
-                    name: name,
-                    grid: JSON.stringify(grid),
-                    ipfsHash: ipfsHash,
-                    txHash: receipt.transactionHash,
-                    timestamp: new Date().toISOString()
-                };
-
-                let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                patterns.push(pattern);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+                showStatus('Loading pattern...');
                 
-                updateSavedPatternsUI();
-                alert('Pattern saved successfully!');
+                // 从IPFS获取数据
+                const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+                const patternData = await response.json();
+                
+                if (!patternData || !patternData.aliveCells) {
+                    throw new Error('Invalid pattern data');
+                }
+
+                // 重置网格
+                grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
+                
+                // 填充活细胞
+                for (const [i, j] of patternData.aliveCells) {
+                    if (i < GRID_SIZE && j < GRID_SIZE) {
+                        grid[i][j] = true;
+                    }
+                }
+
+                updateDisplay();
+                showStatus(`Pattern "${patternData.name}" loaded!`);
+                
             } catch (error) {
-                console.error('Save failed:', error);
-                alert('Save failed: ' + error.message);
+                console.error('Load failed:', error);
+                showStatus('Load failed: ' + error.message);
             }
         }
 
-        // Update saved patterns UI
-        function updateSavedPatternsUI() {
-            const patternsList = document.querySelector('.patterns-list');
-            patternsList.innerHTML = '';
-            
+        // 保存模式到IPFS
+        async function saveCurrentPattern() {
             try {
-                const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                if (!userAccount) {
+                    const connected = await connectWallet();
+                    if (!connected) return;
+                }
+
+                const name = prompt('Name this pattern:', 'Unnamed Pattern');
+                if (!name) return;
+
+                // 将网格数据转换为更紧凑的格式
+                const aliveCells = [];
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        if (grid[i][j]) {
+                            aliveCells.push([i, j]);
+                        }
+                    }
+                }
+
+                // 创建模式数据
+                const patternData = {
+                    name: name,
+                    gridSize: GRID_SIZE,
+                    aliveCells: aliveCells,
+                    timestamp: new Date().toISOString(),
+                    creator: userAccount,
+                    metadata: {
+                        version: "1.0",
+                        type: "LifeChainGenesis Pattern"
+                    }
+                };
+
+                showStatus('Saving pattern...');
+                console.log('Pattern data:', patternData);
+
+                // 上传到IPFS
+                const response = await fetch('http://localhost:3000/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(patternData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const { ipfsHash } = await response.json();
+                
+                // 保存到合约
+                const paymentAmount = web3.utils.toWei('0.001', 'ether');
+                const tx = await gameContract.methods.savePattern(ipfsHash).send({
+                    from: userAccount,
+                    value: paymentAmount
+                });
+
+                showStatus(`Pattern saved! IPFS: ${ipfsHash.slice(0, 6)}...`);
+                
+                // 更新UI
+                updateSavedPatternsUI();
+                
+            } catch (error) {
+                console.error('Save failed:', error);
+                showStatus('Save failed: ' + error.message);
+            }
+        }
+
+        // 更新已保存模式列表
+        async function updateSavedPatternsUI() {
+            const patternsList = document.querySelector('.patterns-list');
+            if (!patternsList) return;
+
+            try {
+                // 从合约获取用户保存的模式
+                const patterns = await gameContract.methods.getUserPatterns(userAccount).call();
+                
+                patternsList.innerHTML = '';
                 
                 if (patterns.length === 0) {
                     patternsList.innerHTML = '<div class="pattern-item">No saved patterns</div>';
                     return;
                 }
 
-                patterns.forEach(pattern => {
-                    const patternElement = document.createElement('div');
-                    patternElement.className = 'pattern-item';
-                    patternElement.innerHTML = `
-                        <span>${pattern.name}</span>
-                        <div class="pattern-actions">
-                            <button onclick="loadPattern('${pattern.id}')">Load</button>
-                            <button onclick="deletePattern('${pattern.id}')">Delete</button>
-                        </div>
-                    `;
-                    patternsList.appendChild(patternElement);
-                });
-            } catch (error) {
-                console.error('Failed to load saved patterns:', error);
-                patternsList.innerHTML = '<div class="pattern-item">Loading failed</div>';
-            }
-        }
-
-        // Load saved pattern
-        function loadPattern(patternId) {
-            try {
-                const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                const pattern = patterns.find(p => p.id === parseInt(patternId));
-                
-                if (pattern) {
-                    grid = JSON.parse(pattern.grid);
-                    updateDisplay();
-                    toggleSavedPatterns();
-                    alert('Pattern loaded successfully!');
+                for (const ipfsHash of patterns) {
+                    try {
+                        // 从IPFS获取模式数据
+                        const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+                        const patternData = await response.json();
+                        
+                        const patternElement = document.createElement('div');
+                        patternElement.className = 'pattern-item';
+                        patternElement.innerHTML = `
+                            <span>${patternData.name}</span>
+                            <div class="pattern-actions">
+                                <button onclick="loadPatternFromIPFS('${ipfsHash}')">Load</button>
+                                <a href="https://gateway.pinata.cloud/ipfs/${ipfsHash}" target="_blank">View</a>
+                            </div>
+                        `;
+                        patternsList.appendChild(patternElement);
+                    } catch (error) {
+                        console.error('Failed to load pattern:', ipfsHash, error);
+                    }
                 }
             } catch (error) {
-                console.error('Failed to load pattern:', error);
-                alert('Failed to load pattern, please try again');
+                console.error('Failed to update patterns list:', error);
+                patternsList.innerHTML = '<div class="pattern-item">Failed to load patterns</div>';
             }
         }
 
-        // Delete saved pattern
-        function deletePattern(patternId) {
-            if (!confirm('Are you sure you want to delete this pattern?')) return;
-
-            try {
-                let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                patterns = patterns.filter(p => p.id !== parseInt(patternId));
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
-                updateSavedPatternsUI();
-                alert('Deleted successfully!');
-            } catch (error) {
-                console.error('Failed to delete pattern:', error);
-                alert('Delete failed, please try again');
+        // 添加状态显示函数
+        function showStatus(message) {
+            const statusElement = document.querySelector('.wallet-status');
+            const addressElement = statusElement?.querySelector('.wallet-address');
+            
+            if (!statusElement || !addressElement) {
+                console.error('Status elements not found');
+                alert(message); // 降级到 alert
+                return;
             }
+
+            addressElement.textContent = message;
+            statusElement.classList.add('show');
+            
+            setTimeout(() => {
+                statusElement.classList.remove('show');
+            }, 3000);
         }
 
         // Initialize saved patterns panel on page load
