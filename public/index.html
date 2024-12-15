@@ -543,7 +543,7 @@
             }
         }
 
-        /* 针对窄屏设备的应式�� */
+        /* 针对窄屏设备的应式 */
         @media screen and (max-width: 360px) {
             /* 容器调整 */
             .container {
@@ -841,10 +841,58 @@
     
     <div class="wallet-status">
         <span class="status-dot"></span>
-        <span class="wallet-address">未连接</span>
+        <span class="wallet-address">未���接</span>
     </div>
 
     <script>
+        // Web3 相关配置
+        // 添加Mantle网络配置
+        const MANTLE_CONFIG = {
+            chainId: '0x138B', // 5003 for Sepolia testnet
+            chainName: 'Mantle Sepolia Testnet',
+            rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
+            nativeCurrency: {
+                name: 'MNT',
+                symbol: 'MNT', 
+                decimals: 18
+            },
+            blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
+        };
+
+        // 初始化Web3变量
+        let web3;
+        let userAccount;
+        let gameContract;
+
+        // 合约ABI
+        const CONTRACT_ABI = [
+            // startGame
+            {
+                "inputs": [],
+                "name": "startGame",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            // savePattern
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "ipfsHash",
+                        "type": "string"
+                    }
+                ],
+                "name": "savePattern",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            }
+        ];
+        
+        // 合约地址
+        const CONTRACT_ADDRESS = "0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71";
+
         // Add global variables
         let currentGridSize = 50;
         let currentCellColor = '#2481cc';
@@ -1098,8 +1146,8 @@
         const STORAGE_KEY = 'life_game_patterns';
 
         // IPFS配置
-        const PINATA_API_KEY = 'YOUR_PINATA_API_KEY';
-        const PINATA_SECRET_KEY = 'YOUR_PINATA_SECRET_KEY';
+        const PINATA_API_KEY = process.env.PINATA_API_KEY;
+        const PINATA_SECRET_KEY = process.env.PINATA_SECRET_KEY;
 
         // 上传到IPFS
         async function uploadToIPFS(data) {
@@ -1263,55 +1311,6 @@
             }
         });
 
-        // 添加Mantle网络配置
-        const MANTLE_CONFIG = {
-          chainId: '0x138B', // 5003 for Sepolia testnet
-          chainName: 'Mantle Sepolia Testnet',
-          rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
-          nativeCurrency: {
-            name: 'MNT',
-            symbol: 'MNT', 
-            decimals: 18
-          },
-          blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
-        };
-
-        // 初始化Web3
-        let web3;
-        let userAccount;
-
-        // 合约ABI
-        const CONTRACT_ABI = [
-            // startGame
-            {
-                "inputs": [],
-                "name": "startGame",
-                "outputs": [],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            // savePattern
-            {
-                "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "ipfsHash",
-                        "type": "string"
-                    }
-                ],
-                "name": "savePattern",
-                "outputs": [],
-                "stateMutability": "payable",
-                "type": "function"
-            }
-        ];
-        
-        // 合约地址 (部署后需要更新)
-        const CONTRACT_ADDRESS = "你的合约地址";
-        
-        // 初始化合约
-        let gameContract;
-        
         // 连接钱包函数
         async function connectWallet() {
           if (typeof window.ethereum !== 'undefined') {

@@ -1,14 +1,25 @@
-require("@nomicfoundation/hardhat-toolbox");
-require('dotenv').config();
+require("@nomicfoundation/hardhat-verify");
+require("@nomicfoundation/hardhat-toolbox"); // 添加这行
+require("dotenv").config();
 
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.19",
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
   networks: {
     mantleTest: {
-      url: process.env.MANTLE_TESTNET_URL || "https://rpc.sepolia.mantle.xyz",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 5003
+      url: "https://rpc.sepolia.mantle.xyz",
+      chainId: 5003,
+      accounts: [process.env.PRIVATE_KEY]
     }
+  },
+  sourcify: {
+    enabled: true
   }
 }; 
