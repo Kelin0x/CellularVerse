@@ -4,6 +4,8 @@
     <title>Game of Life</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
@@ -454,7 +456,6 @@
             }
         }
 
-        /* 控制按钮响应��布局优化 */
         #controls {
             display: flex;
             flex-wrap: wrap;
@@ -542,7 +543,7 @@
             }
         }
 
-        /* 针对窄屏设备的响应式布局 */
+        /* 针对窄屏设备的应式局 */
         @media screen and (max-width: 360px) {
             /* 容器调整 */
             .container {
@@ -699,6 +700,74 @@
                 margin: 0 auto;
             }
         }
+
+        /* 添加悬浮球样式 */
+        .wallet-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .wallet-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(147, 112, 219, 0.3);
+        }
+
+        .wallet-fab .material-icons-round {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .wallet-status {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            padding: 0.8rem 1.2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .wallet-status.show {
+            display: flex;
+        }
+
+        .wallet-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .wallet-fab {
+                bottom: 5rem;
+                right: 1rem;
+            }
+            
+            .wallet-status {
+                bottom: 9rem;
+                right: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -764,6 +833,15 @@
             <button class="close-panel" onclick="toggleSavedPatterns()">Close</button>
         </div>
         <div class="patterns-list"></div>
+    </div>
+
+    <div class="wallet-fab" onclick="connectWallet()">
+        <span class="material-icons-round">account_balance_wallet</span>
+    </div>
+    
+    <div class="wallet-status">
+        <span class="status-dot"></span>
+        <span class="wallet-address">未连接</span>
     </div>
 
     <script>
@@ -953,10 +1031,29 @@
         }
 
         // Start game
-        function startGame() {
-            if (!isRunning) {
-                isRunning = true;
-                gameLoop();
+        async function startGame() {
+            if(!isRunning) {
+                // 检查钱包连接
+                if(!userAccount) {
+                    const connected = await connectWallet();
+                    if(!connected) return;
+                }
+
+                try {
+                    // 调用合约的startGame函数
+                    await gameContract.methods.startGame().send({
+                        from: userAccount,
+                        value: web3.utils.toWei('0.0005', 'ether')
+                    });
+                    
+                    // 开始游戏
+                    isRunning = true;
+                    gameLoop();
+                    
+                } catch (error) {
+                    console.error('Failed to start game:', error);
+                    alert('Failed to start game: ' + error.message);
+                }
             }
         }
 
@@ -1000,27 +1097,78 @@
 
         const STORAGE_KEY = 'life_game_patterns';
 
-        // Save current pattern
-        function saveCurrentPattern() {
+        // IPFS配置
+        const PINATA_API_KEY = 'YOUR_PINATA_API_KEY';
+        const PINATA_SECRET_KEY = 'YOUR_PINATA_SECRET_KEY';
+
+        // 上传到IPFS
+        async function uploadToIPFS(data) {
+          try {
+            const response = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS', 
+              data,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'pinata_api_key': PINATA_API_KEY,
+                  'pinata_secret_api_key': PINATA_SECRET_KEY
+                }
+              }
+            );
+            return response.data.IpfsHash;
+          } catch (error) {
+            console.error('IPFS upload failed:', error);
+            throw error;
+          }
+        }
+
+        // 修改存函数
+        async function saveCurrentPattern() {
+            // 检查钱包连接
+            if(!userAccount) {
+                const connected = await connectWallet();
+                if(!connected) return;
+            }
+
             const name = prompt('Name this pattern:', 'Unnamed Pattern');
             if (!name) return;
 
-            const pattern = {
-                id: Date.now(),
-                name: name,
-                grid: JSON.stringify(grid),
-                timestamp: new Date().toISOString()
-            };
-
             try {
+                // 准备要保存的数据
+                const patternData = {
+                    name: name,
+                    grid: grid,
+                    timestamp: new Date().toISOString(),
+                    creator: userAccount
+                };
+
+                // 上传到IPFS
+                const ipfsHash = await uploadToIPFS(patternData);
+
+                // 调用合约的savePattern函数
+                const receipt = await gameContract.methods.savePattern(ipfsHash).send({
+                    from: userAccount,
+                    value: web3.utils.toWei('0.001', 'ether')
+                });
+
+                // 保存到本地存储
+                const pattern = {
+                    id: Date.now(),
+                    name: name,
+                    grid: JSON.stringify(grid),
+                    ipfsHash: ipfsHash,
+                    txHash: receipt.transactionHash,
+                    timestamp: new Date().toISOString()
+                };
+
                 let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
                 patterns.push(pattern);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+                
                 updateSavedPatternsUI();
                 alert('Pattern saved successfully!');
             } catch (error) {
                 console.error('Save failed:', error);
-                alert('Save failed, please try again');
+                alert('Save failed: ' + error.message);
             }
         }
 
@@ -1090,8 +1238,11 @@
         }
 
         // Initialize saved patterns panel on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             updateSavedPatternsUI();
+            
+            // 尝试自动连接钱包
+            await connectWallet();
         });
 
         // Add gesture controls
@@ -1111,6 +1262,114 @@
                 hideControls(); 
             }
         });
+
+        // 添加Mantle网络配置
+        const MANTLE_CONFIG = {
+          chainId: '0x138B', // 5003 for Sepolia testnet
+          chainName: 'Mantle Sepolia Testnet',
+          rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
+          nativeCurrency: {
+            name: 'MNT',
+            symbol: 'MNT', 
+            decimals: 18
+          },
+          blockExplorerUrls: ['https://sepolia.mantlescan.xyz']
+        };
+
+        // 初始化Web3
+        let web3;
+        let userAccount;
+
+        // 合约ABI
+        const CONTRACT_ABI = [
+            // startGame
+            {
+                "inputs": [],
+                "name": "startGame",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            // savePattern
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "ipfsHash",
+                        "type": "string"
+                    }
+                ],
+                "name": "savePattern",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            }
+        ];
+        
+        // 合约地址 (部署后需要更新)
+        const CONTRACT_ADDRESS = "YOUR_CONTRACT_ADDRESS";
+        
+        // 初始化合约
+        let gameContract;
+        
+        // 连接钱包函数
+        async function connectWallet() {
+          if (typeof window.ethereum !== 'undefined') {
+            try {
+              // 请求用户连接钱包
+              const accounts = await window.ethereum.request({ 
+                method: 'eth_requestAccounts' 
+              });
+              
+              userAccount = accounts[0];
+              
+              // 添加Mantle网络
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [MANTLE_CONFIG]
+              });
+              
+              web3 = new Web3(window.ethereum);
+              // 初始化合约实例
+              gameContract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+              
+              // 更新UI显示
+              const walletStatus = document.querySelector('.wallet-status');
+              const walletAddress = walletStatus.querySelector('.wallet-address');
+              walletAddress.textContent = userAccount.slice(0, 6) + '...' + userAccount.slice(-4);
+              walletStatus.classList.add('show');
+              
+              return true;
+            } catch (error) {
+              console.error('Failed to connect wallet:', error);
+              alert('连接钱失败: ' + error.message);
+              return false;
+            }
+          } else {
+            alert('Please install MetaMask!');
+            return false;
+          }
+        }
+
+        // 监听钱包账户变化
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', async (accounts) => {
+                const walletStatus = document.querySelector('.wallet-status');
+                const walletAddress = walletStatus.querySelector('.wallet-address');
+                
+                if (accounts.length === 0) {
+                    // 用户断开连接
+                    userAccount = null;
+                    walletStatus.classList.remove('show');
+                    walletAddress.textContent = '未连接';
+                } else {
+                    // 账户切换
+                    userAccount = accounts[0];
+                    walletAddress.textContent = userAccount.slice(0, 6) + '...' + userAccount.slice(-4);
+                    walletStatus.classList.add('show');
+                }
+            });
+        }
     </script>
 
 
