@@ -131,10 +131,11 @@ graph TD
 
 ## Deployment 
 
-GameOfLife contract deployed to: 0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
-SmartContract: 0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
+GameOfLife contract deployed to: 0x4Ae98b16E13EA366ee53F76FBbE5A8F9eEC9DEF5
+SmartContract: 0x4Ae98b16E13EA366ee53F76FBbE5A8F9eEC9DEF5
+
 View on Mantle Explorer:
-https://sepolia.mantlescan.xyz/address/0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
+https://sepolia.mantlescan.xyz/address/0x4Ae98b16E13EA366ee53F76FBbE5A8F9eEC9DEF5
 
 ## 🤔 FAQ
 
