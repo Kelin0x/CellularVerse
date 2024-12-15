@@ -558,20 +558,35 @@
             
             /* 网格调整 */
             #grid {
-                width: calc(100vw - 20px); /* 留出左右边距 */
-                height: calc(100vw - 20px); /* 保持正方形 */
+                width: calc(100vw - 20px);
+                height: calc(100vw - 20px);
                 max-width: 340px;
                 max-height: 340px;
                 margin: 0 auto;
                 border-radius: 8px;
                 padding: 1px;
+                gap: 1px;
+                background: var(--grid-bg);
             }
             
             /* 单元格大小调整 */
             .cell {
-                min-width: 3px;
-                min-height: 3px;
-                border-radius: 2px;
+                background: var(--cell-bg);
+                border-radius: 4px;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                position: relative;
+            }
+
+            .cell:hover {
+                transform: scale(1.15);
+                z-index: 2;
+                box-shadow: 0 0 15px rgba(147, 112, 219, 0.3);
+            }
+
+            .cell.alive {
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                box-shadow: 0 0 20px rgba(147, 112, 219, 0.4);
             }
             
             /* 标题调整 */
@@ -630,34 +645,46 @@
             }
             
             .game-container {
-                padding-bottom: 4rem; /* 为底部控制栏留出空间 */
+                padding-bottom: 4rem;
             }
         }
 
         /* 针对网格和单元格的精细调整 */
         @media screen and (max-width: 360px) {
             #grid {
-                width: 320px;  /* 调整为更合适的宽度 */
-                height: 320px;
+                width: calc(100% - 20px);
+                height: calc(100vw - 40px); 
+                max-width: 320px;
+                max-height: 320px;
                 margin: 10px auto;
-                gap: 0;  /* 移除网格间距 */
-                background-color: rgba(233, 236, 239, 0.4); /* 降低网格线的透明度 */
-                padding: 0;
-                border-radius: 4px;
+                gap: 1px;
+                background: var(--grid-bg);
+                padding: 2px;
+                border-radius: 12px;
+                box-shadow: 
+                    0 12px 40px rgba(0, 0, 0, 0.1),
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
             }
 
             .cell {
-                width: 3px;
-                height: 3px;
-                min-width: 3px;
-                min-height: 3px;
-                border-radius: 0;  /* 移除圆角，使其呈现方形 */
-                background: white; /* 设置未激活状态为白色 */
+                background: var(--cell-bg);
+                border-radius: 4px;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                position: relative;
+                min-width: 6px;
+                min-height: 6px;
+            }
+
+            .cell:hover {
+                transform: scale(1.1);
+                z-index: 2;
+                box-shadow: 0 0 10px rgba(147, 112, 219, 0.3);
             }
 
             .cell.alive {
-                background: var(--primary-color); /* 活细胞使用主题色 */
-                box-shadow: none; /* 移除阴影效果 */
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                box-shadow: 0 0 15px rgba(147, 112, 219, 0.4);
             }
 
             /* 优化网格容器 */
@@ -666,10 +693,10 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                background: transparent; /* 移除容器背景 */
-                box-shadow: none;
-                padding-bottom: 4rem; /* 为底部控制栏留出空间 */
-
+                padding-bottom: 4rem;
+                width: 100%;
+                max-width: 360px;
+                margin: 0 auto;
             }
         }
     </style>
