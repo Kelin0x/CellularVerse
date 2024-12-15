@@ -768,9 +768,159 @@
                 right: 1rem;
             }
         }
+
+        /* 添加新的字体 */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Source+Sans+Pro:wght@300;400;600&display=swap');
+
+        /* 侧边栏样式 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 1rem;
+            top: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-content {
+            font-family: 'Source Sans Pro', sans-serif;
+            color: var(--text-color);
+        }
+
+        .sidebar-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid rgba(147, 112, 219, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            margin: 2rem 0 1rem;
+            color: var(--secondary-color);
+        }
+
+        .sidebar-content p {
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: rgba(44, 62, 80, 0.9);
+        }
+
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+        .rules-list li {
+            padding: 1rem;
+            background: rgba(147, 112, 219, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .quote-box {
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(36, 129, 204, 0.05), rgba(147, 112, 219, 0.05));
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+
+        .quote-box p {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                left: -100%;
+            }
+
+            .sidebar-toggle {
+                left: 0.5rem;
+                top: 0.5rem;
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <span class="material-icons-round">menu</span>
+    </button>
+
+    <div class="sidebar">
+        <div class="sidebar-content">
+            <h2>Conway's Game of Life</h2>
+            
+            <div class="quote-box">
+                <p>"The Game of Life is not just a game - it's a mirror to the fundamental patterns of existence."</p>
+            </div>
+
+            <h3>The Concept</h3>
+            <p>Conway's Game of Life is a cellular automaton that demonstrates how complex patterns can emerge from simple rules. It serves as a powerful metaphor for the emergence of complexity in natural systems.</p>
+
+            <h3>The Rules</h3>
+            <ul class="rules-list">
+                <li>Any live cell with fewer than two live neighbors dies (underpopulation)</li>
+                <li>Any live cell with two or three live neighbors lives on to the next generation</li>
+                <li>Any live cell with more than three live neighbors dies (overpopulation)</li>
+                <li>Any dead cell with exactly three live neighbors becomes a live cell (reproduction)</li>
+            </ul>
+
+            <h3>The Philosophy</h3>
+            <p>The Game of Life demonstrates how complex behaviors and patterns can emerge from simple rules, much like the complexity we observe in nature and society.</p>
+
+            <h3>Patterns and Emergence</h3>
+            <p>From simple initial configurations, fascinating patterns emerge: stable forms, oscillators, and "gliders" that move across the grid. These patterns mirror the self-organizing principles found throughout nature.</p>
+
+            <div class="quote-box">
+                <p>"In the Game of Life, as in life itself, the whole becomes greater than the sum of its parts."</p>
+            </div>
+
+            <h3>Web3 Integration</h3>
+            <p>This version integrates blockchain technology, allowing patterns to be preserved on the Mantle network and shared across the decentralized web, creating a permanent record of digital life.</p>
+        </div>
+    </div>
+
     <div class="container">
         <header class="header">
             <h1>LifeChain Genesis</h1>
@@ -841,7 +991,7 @@
     
     <div class="wallet-status">
         <span class="status-dot"></span>
-        <span class="wallet-address">未���接</span>
+        <span class="wallet-address">未连接</span>
     </div>
 
     <script>
@@ -1369,6 +1519,28 @@
                 }
             });
         }
+
+        // 侧边栏控制
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            sidebar.classList.toggle('open');
+            
+            if (sidebar.classList.contains('open')) {
+                toggle.innerHTML = '<span class="material-icons-round">close</span>';
+            } else {
+                toggle.innerHTML = '<span class="material-icons-round">menu</span>';
+            }
+        }
+
+        // 点击侧边栏外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            if (!sidebar.contains(e.target) && !toggle.contains(e.target) && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
     </script>
 
 
