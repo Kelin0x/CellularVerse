@@ -220,13 +220,13 @@
         }
 
         .stats {
-            margin-top: 1.5rem;
+            margin-top: 0.5rem;
             text-align: center;
             font-size: 0.9rem;
             color: var(--text-color);
             opacity: 0.8;
             background: rgba(255, 255, 255, 0.1);
-            padding: 0.8rem 1.5rem;
+            padding: 0.2rem 1.5rem;
             border-radius: 10px;
             backdrop-filter: blur(5px);
         }
@@ -454,7 +454,7 @@
             }
         }
 
-        /* 控制按钮响应式布局优化 */
+        /* 控制按钮响应��布局优化 */
         #controls {
             display: flex;
             flex-wrap: wrap;
@@ -633,6 +633,45 @@
                 padding-bottom: 4rem; /* 为底部控制栏留出空间 */
             }
         }
+
+        /* 针对网格和单元格的精细调整 */
+        @media screen and (max-width: 360px) {
+            #grid {
+                width: 320px;  /* 调整为更合适的宽度 */
+                height: 320px;
+                margin: 10px auto;
+                gap: 0;  /* 移除网格间距 */
+                background-color: rgba(233, 236, 239, 0.4); /* 降低网格线的透明度 */
+                padding: 0;
+                border-radius: 4px;
+            }
+
+            .cell {
+                width: 3px;
+                height: 3px;
+                min-width: 3px;
+                min-height: 3px;
+                border-radius: 0;  /* 移除圆角，使其呈现方形 */
+                background: white; /* 设置未激活状态为白色 */
+            }
+
+            .cell.alive {
+                background: var(--primary-color); /* 活细胞使用主题色 */
+                box-shadow: none; /* 移除阴影效果 */
+            }
+
+            /* 优化网格容器 */
+            .game-container {
+                padding: 0.5rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background: transparent; /* 移除容器背景 */
+                box-shadow: none;
+                padding-bottom: 4rem; /* 为底部控制栏留出空间 */
+
+            }
+        }
     </style>
 </head>
 <body>
@@ -702,7 +741,7 @@
 
     <script>
         // Add global variables
-        let currentGridSize = 80;
+        let currentGridSize = 50;
         let currentCellColor = '#2481cc';
 
         // Modify GRID_SIZE definition
