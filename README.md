@@ -128,6 +128,16 @@ graph TD
 - Real-time evolution display
 - Interactive operation interface
 
+## Deployment 
+Starting to deploy GameOfLife contract...
+GameOfLife contract deployed to: 0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
+Waiting for block confirmation...
+Deployment completed!
+----------------------------------------
+SmartContract: 0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
+View on Mantle Explorer:
+https://sepolia.mantlescan.xyz/address/0x38F8190aBc3390ba9c90Db8A624Ec42574C39A71
+
 ## 🤔 FAQ
 
 Q: What is LifeChain Genesis?  
