@@ -65,9 +65,10 @@
         .quote-container {
             display: flex;
             flex-direction: column;
-            margin-bottom: 2rem;
             align-items: center;
-            gap: 20rem;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 2rem;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border-radius: 24px;
@@ -75,17 +76,16 @@
             box-shadow: 
                 0 20px 60px rgba(0, 0, 0, 0.1),
                 0 1px 2px rgba(255, 255, 255, 0.05);
-            position: relative;
-            overflow: hidden;
-            
         }
 
         .quote {
+            width: 100%;
+            text-align: center;
             font-size: 1.2rem;
-            color: var(--quote-color);
             line-height: 1.8;
             position: relative;
             padding: 0 3rem;
+            margin: 0;
         }
 
         .quote::before,
@@ -111,6 +111,9 @@
         }
 
         .game-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -440,9 +443,9 @@
         /* Responsive adjustments */
         @media (max-width: 767px) {
             .quote-container {
-                width: 95vw;
-                margin: 1rem auto;
+                width: 95%;
                 padding: 1.5rem;
+                margin: 1rem auto;
             }
         }
     </style>
@@ -455,8 +458,8 @@
 
         <div class="quote-container">
             <p class="quote">
-                If we could see a person's entire life at a glance.<br>
-                I think the structure must be very beautiful.
+                &nbsp;&nbsp;If we could see a person's entire life at a glance.<br>
+                &nbsp;&nbsp;I think the structure must be very beautiful.&nbsp;&nbsp;
             </p>
         </div>
         
