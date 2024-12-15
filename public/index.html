@@ -324,6 +324,61 @@
             color: var(--text-color);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
+        .saved-patterns-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .saved-patterns-panel.show {
+            transform: translateX(0);
+        }
+
+        .patterns-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .patterns-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pattern-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .pattern-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pattern-actions button {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -346,6 +401,8 @@
                 <button onclick="clearGrid()">清空画布</button>
                 <button onclick="randomize()">随机生成</button>
                 <button onclick="toggleSettings()">设置</button>
+                <button onclick="saveCurrentPattern()">保存模式</button>
+                <button onclick="toggleSavedPatterns()">已保存模式</button>
             </div>
             
             <div id="grid"></div>
@@ -371,6 +428,14 @@
             <button onclick="applySettings()">应用设置</button>
             <button onclick="toggleSettings()">关闭</button>
         </div>
+    </div>
+
+    <div class="saved-patterns-panel">
+        <div class="patterns-header">
+            <h3>已保存的模式</h3>
+            <button class="close-panel" onclick="toggleSavedPatterns()">关闭</button>
+        </div>
+        <div class="patterns-list"></div>
     </div>
 
     <script>
@@ -431,7 +496,7 @@
             });
         }
 
-        // 修改 getGridSize 函数
+        // 改 getGridSize 函数
         function getGridSize() {
             if (window.innerWidth <= 767) {
                 return Math.min(40, currentGridSize); // 移动端限制最大大小为40
@@ -599,6 +664,107 @@
             const panel = document.getElementById('settings-panel');
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
         }
+
+        function toggleSavedPatterns() {
+            const panel = document.querySelector('.saved-patterns-panel');
+            panel.classList.toggle('show');
+        }
+
+        const STORAGE_KEY = 'life_game_patterns';
+
+        // 保存当前模式
+        function saveCurrentPattern() {
+            const name = prompt('给这个模式起个名字：', '未命名模式');
+            if (!name) return;
+
+            const pattern = {
+                id: Date.now(),
+                name: name,
+                grid: JSON.stringify(grid),
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                patterns.push(pattern);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+                updateSavedPatternsUI();
+                alert('模式保存成功！');
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请重试');
+            }
+        }
+
+        // 更新已保存模式的UI
+        function updateSavedPatternsUI() {
+            const patternsList = document.querySelector('.patterns-list');
+            patternsList.innerHTML = '';
+            
+            try {
+                const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                
+                if (patterns.length === 0) {
+                    patternsList.innerHTML = '<div class="pattern-item">暂无保存的模式</div>';
+                    return;
+                }
+
+                patterns.forEach(pattern => {
+                    const patternElement = document.createElement('div');
+                    patternElement.className = 'pattern-item';
+                    patternElement.innerHTML = `
+                        <span>${pattern.name}</span>
+                        <div class="pattern-actions">
+                            <button onclick="loadPattern('${pattern.id}')">加载</button>
+                            <button onclick="deletePattern('${pattern.id}')">删除</button>
+                        </div>
+                    `;
+                    patternsList.appendChild(patternElement);
+                });
+            } catch (error) {
+                console.error('加载保存的模式失败:', error);
+                patternsList.innerHTML = '<div class="pattern-item">加载失败</div>';
+            }
+        }
+
+        // 加载保存的模式
+        function loadPattern(patternId) {
+            try {
+                const patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                const pattern = patterns.find(p => p.id === parseInt(patternId));
+                
+                if (pattern) {
+                    grid = JSON.parse(pattern.grid);
+                    updateDisplay();
+                    toggleSavedPatterns();
+                    alert('模式加载成功！');
+                }
+            } catch (error) {
+                console.error('加载模式失败:', error);
+                alert('加载模式失败，请重试');
+            }
+        }
+
+        // 删除保存的模式
+        function deletePattern(patternId) {
+            if (!confirm('确定要删除这个模式吗？')) return;
+
+            try {
+                let patterns = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                patterns = patterns.filter(p => p.id !== parseInt(patternId));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+                updateSavedPatternsUI();
+                alert('删除成功！');
+            } catch (error) {
+                console.error('删除模式失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 在页面加载时初始化已保存模式面板
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSavedPatternsUI();
+        });
     </script>
 
 
