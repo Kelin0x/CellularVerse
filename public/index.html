@@ -139,18 +139,23 @@
             margin: 0 auto;
         }
 
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         button {
-            padding: 0.6rem 1.2rem;
+            padding: 0.6rem 1rem;
             border: none;
-            border-radius: 15px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 25px rgba(147, 112, 219, 0.3);
+            font-size: 0.85rem;
             min-width: auto;
+            white-space: nowrap;
         }
 
         button:hover {
@@ -446,6 +451,186 @@
                 width: 95%;
                 padding: 1.5rem;
                 margin: 1rem auto;
+            }
+        }
+
+        /* 控制按钮响应式布局优化 */
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            padding: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.6rem 1rem;  /* 减小内边距 */
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 500;
+            font-size: 0.85rem;  /* 稍微减小字体 */
+            min-width: auto;     /* 移除最小宽度限制 */
+            white-space: nowrap; /* 防止文字换行 */
+        }
+
+        /* 移动端特定样式 */
+        @media (max-width: 360px) {
+            #controls {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(255,255,255,0.95);
+                backdrop-filter: blur(10px);
+                padding: 0.5rem;
+                z-index: 100;
+                gap: 0.4rem;  /* 减小按钮间距 */
+            }
+
+            .control-group {
+                gap: 0.4rem;
+                width: 100%;  /* 让每组按钮占满宽度 */
+                justify-content: space-evenly;  /* 均匀分布 */
+            }
+
+            button {
+                flex: 1;      /* 按钮等宽分布 */
+                max-width: calc(33.33% - 0.4rem);  /* 限制最大宽度 */
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            /* 为底部控制栏留出空间 */
+            .game-container {
+                padding-bottom: 4rem;
+            }
+
+            /* 优化网格显示区域 */
+            #grid {
+                width: 340px;  /* 适应 360px 宽度 */
+                height: 340px;
+                margin: 0 auto;
+            }
+
+            .stats {
+                font-size: 0.8rem;
+                padding: 0.5rem;
+            }
+        }
+
+        /* 超窄屏幕特殊处理 */
+        @media (max-width: 320px) {
+            button {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            #grid {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        /* 针对窄屏设备的响应式布局 */
+        @media screen and (max-width: 360px) {
+            /* 容器调整 */
+            .container {
+                padding: 0.5rem;
+            }
+            
+            /* 游戏容器调整 */
+            .game-container {
+                padding: 1rem;
+                margin: 0;
+                border-radius: 12px;
+            }
+            
+            /* 网格调整 */
+            #grid {
+                width: calc(100vw - 20px); /* 留出左右边距 */
+                height: calc(100vw - 20px); /* 保持正方形 */
+                max-width: 340px;
+                max-height: 340px;
+                margin: 0 auto;
+                border-radius: 8px;
+                padding: 1px;
+            }
+            
+            /* 单元格大小调整 */
+            .cell {
+                min-width: 3px;
+                min-height: 3px;
+                border-radius: 2px;
+            }
+            
+            /* 标题调整 */
+            .header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* 引用容器调整 */
+            .quote-container {
+                padding: 1rem;
+                margin: 0.5rem auto;
+                border-radius: 12px;
+            }
+            
+            .quote {
+                font-size: 0.9rem;
+                padding: 0 1.5rem;
+            }
+            
+            /* 控制按钮调整 */
+            #controls {
+                padding: 0.5rem;
+                gap: 0.3rem;
+                position: fixed;
+                bottom: 0;
+                background: rgba(255, 255, 255, 0.95);
+            }
+            
+            .control-group {
+                gap: 0.3rem;
+            }
+            
+            button {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+                border-radius: 8px;
+            }
+            
+            /* 状态显示调整 */
+            .stats {
+                font-size: 0.8rem;
+                padding: 0.5rem;
+                margin-top: 1rem;
+            }
+        }
+
+        /* 针对高度的优化 */
+        @media screen and (max-height: 740px) and (max-width: 360px) {
+            .header {
+                margin-bottom: 1rem;
+            }
+            
+            .quote-container {
+                margin: 0.5rem auto;
+            }
+            
+            .game-container {
+                padding-bottom: 4rem; /* 为底部控制栏留出空间 */
             }
         }
     </style>
